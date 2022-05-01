@@ -1,0 +1,21 @@
+{
+  "name": "slack-bot",
+  "version": "1.0.0",
+  "main": "dist/app.js",
+  "repository": "git@github.com:raphsutti/slack-bot-test.git",
+  "author": "Raph <neoster9@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@slack/bolt": "3.11.0",
+    "@slack/rtm-api": "6.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.14.38",
+    "serverless-esbuild": "1.26.2",
+    "serverless-offline": "8.5.0"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "yarn build && node dist/app.js"
+  }
+}
