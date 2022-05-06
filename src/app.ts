@@ -8,15 +8,18 @@ import {
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
 
+interface DateSelectionAction extends BasicElementAction {
+  selected_date: string;
+}
+
 if (!process.env.SLACK_SIGNING_SECRET) {
   throw Error("no SLACK_SIGNING_SECRET");
 }
-// Initialize your custom receiver
+
 const awsLambdaReceiver = new AwsLambdaReceiver({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
 
-// Initializes your app with your bot token and app token
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
@@ -25,14 +28,15 @@ const app = new App({
   // appToken: process.env.SLACK_APP_TOKEN,
 });
 
-const isGenericMessageEvent = (msg: MessageEvent): msg is GenericMessageEvent =>
-  (msg as GenericMessageEvent).subtype === undefined;
-
 // Listens to incoming messages that contain "hello"
 app.message("hello", async ({ message, say }) => {
+  const isGenericMessageEvent = (
+    msg: MessageEvent
+  ): msg is GenericMessageEvent =>
+    (msg as GenericMessageEvent).subtype === undefined;
+
   if (!isGenericMessageEvent(message)) return;
 
-  // say() sends a message to the channel where the event was triggered
   await say({
     blocks: [
       {
@@ -55,7 +59,8 @@ app.message("hello", async ({ message, say }) => {
   });
 });
 
-app.command("/leavebot", async ({ ack, body, client, logger }) => {
+// Leave bot
+app.command("/leavebot", async ({ ack, body, client }) => {
   await ack();
 
   const today = new Date().toISOString().slice(0, 10);
@@ -112,43 +117,34 @@ app.command("/leavebot", async ({ ack, body, client, logger }) => {
         },
       },
     });
-    console.log("result: ", result);
   } catch (error) {}
 });
 
 let leaveStart: string;
 let leaveEnd: string;
 
-interface DateSelectionAction extends BasicElementAction {
-  selected_date: string;
-}
-
-app.action("leaveStartDate", async ({ ack, body, client, logger }) => {
+app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
-  console.log("body: ", body);
 
   leaveStart = ((body as BlockAction).actions[0] as DateSelectionAction)
     .selected_date;
   console.log("leaveStart: ", leaveStart);
 });
 
-app.action("leaveEndDate", async ({ ack, body, client, logger }) => {
+app.action("leaveEndDate", async ({ ack, body }) => {
   await ack();
   leaveEnd = ((body as BlockAction).actions[0] as DateSelectionAction)
     .selected_date;
   console.log("leaveEnd: ", leaveEnd);
 });
 
-app.view("viewSelectDateRange", async ({ ack, body, view, client }) => {
+app.view("viewSelectDateRange", async ({ ack, body, client, view }) => {
   await ack();
 
-  const user = body["user"]["id"];
-
-  let msg = `<@${user}> has entered leave. Start: ${leaveStart}; End: ${leaveEnd}`;
   try {
     await client.chat.postMessage({
       channel: "#noise",
-      text: msg,
+      text: `<@${body.user.id}> has entered leave. \nStart: ${view.state.values.leaveStartDate.leaveStartDate.selected_date}\nEnd: ${view.state.values.leaveEndDate.leaveEndDate.selected_date}`,
     });
   } catch (error) {}
 });
