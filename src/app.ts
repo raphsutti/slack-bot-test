@@ -24,8 +24,6 @@ const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  // socketMode: true,
-  // appToken: process.env.SLACK_APP_TOKEN,
 });
 
 // Listens to incoming messages that contain "hello"
@@ -120,6 +118,14 @@ app.command("/leavebot", async ({ ack, body, client }) => {
   } catch (error) {}
 });
 
+// TODO test slash command input
+app.command("/leavebot list", async ({ ack, say }) => {
+  await ack();
+  await say({
+    text: "working",
+  });
+});
+
 let leaveStart: string;
 let leaveEnd: string;
 
@@ -141,16 +147,23 @@ app.action("leaveEndDate", async ({ ack, body }) => {
 app.view("viewSelectDateRange", async ({ ack, body, client, view }) => {
   await ack();
 
+  // TODO get userName from body
   try {
     await client.chat.postMessage({
       channel: "#noise",
       text: `<@${body.user.id}> has entered leave. \nStart: ${view.state.values.leaveStartDate.leaveStartDate.selected_date}\nEnd: ${view.state.values.leaveEndDate.leaveEndDate.selected_date}`,
     });
+
+    // TODO Dynamo entry put
   } catch (error) {}
 });
 
-// TODO show current leave
-// ? store as date range? What about half days?
+// TODO show current leave user activated
+// TODO show current leave cron
+
+// TODO remove leave user activated
+
+// TODO remove old leave from db
 
 export const handler = async (event: AwsEvent, context: any, callback: any) => {
   const receiver = await awsLambdaReceiver.start();
