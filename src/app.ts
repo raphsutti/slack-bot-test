@@ -3,8 +3,8 @@ import {
   AwsLambdaReceiver,
   MessageEvent,
   GenericMessageEvent,
-  ReactionAddedEvent,
-  ReactionMessageItem,
+  BlockAction,
+  BasicElementAction,
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
 
@@ -27,11 +27,6 @@ const app = new App({
 
 const isGenericMessageEvent = (msg: MessageEvent): msg is GenericMessageEvent =>
   (msg as GenericMessageEvent).subtype === undefined;
-
-// const isMessageItem = (
-//   item: ReactionAddedEvent["item"]
-// ): item is ReactionMessageItem =>
-//   (item as ReactionMessageItem).type === "message";
 
 // Listens to incoming messages that contain "hello"
 app.message("hello", async ({ message, say }) => {
@@ -60,21 +55,107 @@ app.message("hello", async ({ message, say }) => {
   });
 });
 
-// Listens for an action from a button click
-app.action("button_click", async ({ body, ack, say }) => {
+app.command("/leavebot", async ({ ack, body, client, logger }) => {
   await ack();
 
-  await say(`<@${body.user.id}> clicked the button`);
+  const today = new Date().toISOString().slice(0, 10);
+
+  try {
+    const result = await client.views.open({
+      trigger_id: body.trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "viewSelectDateRange",
+        title: {
+          type: "plain_text",
+          text: "Leave entry",
+        },
+        blocks: [
+          {
+            type: "section",
+            block_id: "leaveStartDate",
+            text: {
+              type: "mrkdwn",
+              text: "Starting date",
+            },
+            accessory: {
+              type: "datepicker",
+              action_id: "leaveStartDate",
+              initial_date: today,
+              placeholder: {
+                type: "plain_text",
+                text: "Select a date",
+              },
+            },
+          },
+          {
+            type: "section",
+            block_id: "leaveEndDate",
+            text: {
+              type: "mrkdwn",
+              text: "End date",
+            },
+            accessory: {
+              type: "datepicker",
+              action_id: "leaveEndDate",
+              initial_date: today,
+              placeholder: {
+                type: "plain_text",
+                text: "Select a date",
+              },
+            },
+          },
+        ],
+        submit: {
+          type: "plain_text",
+          text: "Submit",
+        },
+      },
+    });
+    console.log("result: ", result);
+  } catch (error) {}
 });
 
-// Listens to incoming messages that contain "goodbye"
-app.message("goodbye", async ({ message, say }) => {
-  if (!isGenericMessageEvent(message)) return;
-  // say() sends a message to the channel where the event was triggered
-  await say(`See ya later, <@${message.user}> :wave:`);
+let leaveStart: string;
+let leaveEnd: string;
+
+interface DateSelectionAction extends BasicElementAction {
+  selected_date: string;
+}
+
+app.action("leaveStartDate", async ({ ack, body, client, logger }) => {
+  await ack();
+  console.log("body: ", body);
+
+  leaveStart = ((body as BlockAction).actions[0] as DateSelectionAction)
+    .selected_date;
+  console.log("leaveStart: ", leaveStart);
 });
 
-// Handle the Lambda function event
+app.action("leaveEndDate", async ({ ack, body, client, logger }) => {
+  await ack();
+  leaveEnd = ((body as BlockAction).actions[0] as DateSelectionAction)
+    .selected_date;
+  console.log("leaveEnd: ", leaveEnd);
+});
+
+app.view("viewSelectDateRange", async ({ ack, body, view, client }) => {
+  await ack();
+
+  const user = body["user"]["id"];
+
+  let msg = `<@${user}> has entered leave. Start: ${leaveStart}; End: ${leaveEnd}`;
+  try {
+    await client.chat.postMessage({
+      channel: "#noise",
+      text: msg,
+    });
+  } catch (error) {}
+});
+
+// TODO show current leave
+// ? store as date range? What about half days?
+
 export const handler = async (event: AwsEvent, context: any, callback: any) => {
   const receiver = await awsLambdaReceiver.start();
   return receiver(event, context, callback);
