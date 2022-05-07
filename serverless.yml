@@ -1,4 +1,4 @@
-service: serverless-bolt-js
+service: athena-leave-bot
 frameworkVersion: "3.15.0"
 useDotenv: true
 

@@ -1,8 +1,8 @@
 {
   "service": {
-    "service": "serverless-bolt-js",
+    "service": "athena-leave-bot",
     "serviceObject": {
-      "name": "serverless-bolt-js"
+      "name": "athena-leave-bot"
     },
     "provider": {
       "name": "aws",
@@ -90,7 +90,7 @@
           "SlackLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/serverless-bolt-js-dev-slack"
+              "LogGroupName": "/aws/lambda/athena-leave-bot-dev-slack"
             }
           },
           "IamRoleLambdaExecution": {
@@ -118,7 +118,7 @@
                     "Fn::Join": [
                       "-",
                       [
-                        "serverless-bolt-js",
+                        "athena-leave-bot",
                         "dev",
                         "lambda"
                       ]
@@ -135,7 +135,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-bolt-js-dev*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/athena-leave-bot-dev*:*"
                           }
                         ]
                       },
@@ -146,7 +146,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-bolt-js-dev*:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/athena-leave-bot-dev*:*:*"
                           }
                         ]
                       }
@@ -159,7 +159,7 @@
                 "Fn::Join": [
                   "-",
                   [
-                    "serverless-bolt-js",
+                    "athena-leave-bot",
                     "dev",
                     {
                       "Ref": "AWS::Region"
@@ -177,11 +177,11 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/serverless-bolt-js/dev/1651835385749-2022-05-06T11:09:45.749Z/serverless-bolt-js.zip"
+                "S3Key": "serverless/athena-leave-bot/dev/1651890967878-2022-05-07T02:36:07.878Z/athena-leave-bot.zip"
               },
               "Handler": "src/app.handler",
               "Runtime": "nodejs12.x",
-              "FunctionName": "serverless-bolt-js-dev-slack",
+              "FunctionName": "athena-leave-bot-dev-slack",
               "MemorySize": 1024,
               "Timeout": 6,
               "Environment": {
@@ -201,20 +201,20 @@
               "SlackLogGroup"
             ]
           },
-          "SlackLambdaVersionS3QwWBBPI9zR0TPJRkrJznZEt2uVDLMCObG7H7IO1U": {
+          "SlackLambdaVersioniVkLLtiLY17m3iRhDHqzZT3673L2qAQ6ZXEddpjFY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "SlackLambdaFunction"
               },
-              "CodeSha256": "sNIeEKIvaz+hsN88sQv5h8UKkDpxpVUAqXR+cgkBS5k="
+              "CodeSha256": "g6zwY0uoHmSRM0KrRaN7BhGl2SnA9+Zd761y2gVKtak="
             }
           },
           "ApiGatewayRestApi": {
             "Type": "AWS::ApiGateway::RestApi",
             "Properties": {
-              "Name": "dev-serverless-bolt-js",
+              "Name": "dev-athena-leave-bot",
               "EndpointConfiguration": {
                 "Types": [
                   "EDGE"
@@ -296,7 +296,7 @@
               "SlackLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1651835383407": {
+          "ApiGatewayDeployment1651890965834": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -352,16 +352,16 @@
               "Ref": "ServerlessDeploymentBucket"
             },
             "Export": {
-              "Name": "sls-serverless-bolt-js-dev-ServerlessDeploymentBucketName"
+              "Name": "sls-athena-leave-bot-dev-ServerlessDeploymentBucketName"
             }
           },
           "SlackLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "SlackLambdaVersionS3QwWBBPI9zR0TPJRkrJznZEt2uVDLMCObG7H7IO1U"
+              "Ref": "SlackLambdaVersioniVkLLtiLY17m3iRhDHqzZT3673L2qAQ6ZXEddpjFY"
             },
             "Export": {
-              "Name": "sls-serverless-bolt-js-dev-SlackLambdaFunctionQualifiedArn"
+              "Name": "sls-athena-leave-bot-dev-SlackLambdaFunctionQualifiedArn"
             }
           },
           "ServiceEndpoint": {
@@ -387,7 +387,7 @@
               ]
             },
             "Export": {
-              "Name": "sls-serverless-bolt-js-dev-ServiceEndpoint"
+              "Name": "sls-athena-leave-bot-dev-ServiceEndpoint"
             }
           }
         }
@@ -493,7 +493,7 @@
             }
           }
         ],
-        "name": "serverless-bolt-js-dev-slack",
+        "name": "athena-leave-bot-dev-slack",
         "package": {
           "patterns": []
         },
@@ -501,13 +501,13 @@
         "timeout": 6,
         "runtime": "nodejs12.x",
         "vpc": {},
-        "versionLogicalId": "SlackLambdaVersionS3QwWBBPI9zR0TPJRkrJznZEt2uVDLMCObG7H7IO1U"
+        "versionLogicalId": "SlackLambdaVersioniVkLLtiLY17m3iRhDHqzZT3673L2qAQ6ZXEddpjFY"
       }
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
     "initialServerlessConfig": {
-      "service": "serverless-bolt-js",
+      "service": "athena-leave-bot",
       "frameworkVersion": "3.15.0",
       "useDotenv": true,
       "provider": {
@@ -524,7 +524,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/serverless-bolt-js/dev/1651835385749-2022-05-06T11:09:45.749Z",
-    "artifact": "serverless-bolt-js.zip"
+    "artifactDirectoryName": "serverless/athena-leave-bot/dev/1651890967878-2022-05-07T02:36:07.878Z",
+    "artifact": "athena-leave-bot.zip"
   }
 }
