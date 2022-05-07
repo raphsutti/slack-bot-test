@@ -8,6 +8,7 @@ import { v4 as uuidV4 } from "uuid";
 const DYNAMO_TABLE = "athena-leave";
 
 // TODO add leave details
+// ? add profile pic link
 interface Leave {
   userId: string;
   userName: string;
