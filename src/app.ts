@@ -7,6 +7,7 @@ import {
   BasicElementAction,
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
+import { putDynamoItem, scanDynamo } from "./dynamo";
 
 interface DateSelectionAction extends BasicElementAction {
   selected_date: string;
@@ -58,7 +59,48 @@ app.message("hello", async ({ message, say }) => {
 });
 
 // Leave bot
-app.command("/leavebot", async ({ ack, body, client }) => {
+app.command("/leavebot", async ({ ack, say }) => {
+  await ack();
+  await say({
+    blocks: [
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "🏝 Input new leave",
+              emoji: true,
+            },
+            value: "input-leave",
+            action_id: "inputLeave",
+          },
+        ],
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "😌 Who's on leave?",
+              emoji: true,
+            },
+            value: "list-leave",
+            action_id: "listLeave",
+          },
+        ],
+      },
+    ],
+  });
+});
+
+let leaveStart: string;
+let leaveEnd: string;
+
+app.action("inputLeave", async ({ ack, body, client }) => {
   await ack();
 
   const today = new Date().toISOString().slice(0, 10);
@@ -118,16 +160,59 @@ app.command("/leavebot", async ({ ack, body, client }) => {
   } catch (error) {}
 });
 
-// TODO test slash command input
-app.command("/leavebot list", async ({ ack, say }) => {
+// TODO list all leave
+// ? show profile pic
+app.action("listLeave", async ({ ack, body, client }) => {
   await ack();
-  await say({
-    text: "working",
-  });
-});
 
-let leaveStart: string;
-let leaveEnd: string;
+  try {
+    const { Items } = await scanDynamo();
+
+    if (!Items) {
+      return;
+    }
+
+    interface LeaveList {
+      userId: string;
+      name: string;
+      leavePeriod: string[];
+    }
+    let leaveList: LeaveList[] = [];
+    Items.forEach((el) => {
+      const index = leaveList.findIndex((user) => user.userId === el.userId);
+      if (index === -1) {
+        leaveList.push({
+          userId: el.userId,
+          name: el.userName,
+          leavePeriod: [`${el.leaveStart} to ${el.leaveEnd}`],
+        });
+      }
+      if (index >= 0) {
+        leaveList[index].leavePeriod.push(`${el.leaveStart} to ${el.leaveEnd}`);
+      }
+    });
+
+    console.log("payload: ", leaveList);
+
+    client.chat.postMessage({
+      channel: "#noise",
+      text: "listing all the leave",
+      blocks: [
+        {
+          type: "context",
+          elements: [
+            {
+              type: "plain_text",
+              // TODO format display message nicely
+              text: JSON.stringify(leaveList),
+              emoji: true,
+            },
+          ],
+        },
+      ],
+    });
+  } catch (error) {}
+});
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
@@ -144,17 +229,31 @@ app.action("leaveEndDate", async ({ ack, body }) => {
   console.log("leaveEnd: ", leaveEnd);
 });
 
-app.view("viewSelectDateRange", async ({ ack, body, client, view }) => {
+app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
   await ack();
 
-  // TODO get userName from body
   try {
+    const leaveStart =
+      view.state.values.leaveStartDate.leaveStartDate.selected_date;
+    const leaveEnd = view.state.values.leaveEndDate.leaveEndDate.selected_date;
+
+    if (!leaveStart || !leaveEnd) {
+      logger.error("Missing leave start or leave end date");
+      return;
+    }
+
     await client.chat.postMessage({
       channel: "#noise",
-      text: `<@${body.user.id}> has entered leave. \nStart: ${view.state.values.leaveStartDate.leaveStartDate.selected_date}\nEnd: ${view.state.values.leaveEndDate.leaveEndDate.selected_date}`,
+      text: `<@${body.user.id}> has entered leave 🏝\nStart: ${leaveStart}\nEnd: ${leaveEnd}`,
     });
 
-    // TODO Dynamo entry put
+    const { id, name } = body.user;
+    putDynamoItem({
+      userId: id,
+      userName: name,
+      leaveStart,
+      leaveEnd,
+    });
   } catch (error) {}
 });
 
