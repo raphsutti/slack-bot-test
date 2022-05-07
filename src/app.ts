@@ -184,9 +184,10 @@ app.action("listLeave", async ({ ack, client }) => {
 
     leaveList.forEach((user) => {
       displayAllLeaveText += user.name + " 🏝\n";
-      user.leavePeriod.sort().forEach((leave) => {
+      user.leavePeriod.forEach(({ leave }) => {
         displayAllLeaveText += leave + "\n";
       });
+
       displayAllLeaveText += "\n";
     });
 
@@ -211,6 +212,15 @@ app.action("listLeave", async ({ ack, client }) => {
 app.action("deleteLeave", async ({ ack, say }) => {
   await ack();
 
+  const { Items } = await scanDynamo();
+
+  if (!Items) {
+    return;
+  }
+
+  const leaveList = formatLeaveList(Items);
+
+  // TODO display each leave entries with buttons
   say({
     blocks: [
       {
