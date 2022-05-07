@@ -8,6 +8,7 @@ import {
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
 import { putDynamoItem, scanDynamo } from "./dynamo";
+import { formatLeaveList } from "./formatLeaveList";
 
 interface DateSelectionAction extends BasicElementAction {
   selected_date: string;
@@ -80,11 +81,21 @@ app.command("/leavebot", async ({ ack, say }) => {
             type: "button",
             text: {
               type: "plain_text",
-              text: "👀 show me everyone's leave",
+              text: "👀 Show me everyone's leave",
               emoji: true,
             },
             value: "list-leave",
             action_id: "listLeave",
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "🙅‍♂️ Delete leave entry",
+              emoji: true,
+            },
+            value: "delete-leave",
+            action_id: "deleteLeave",
           },
         ],
       },
@@ -95,6 +106,7 @@ app.command("/leavebot", async ({ ack, say }) => {
 let leaveStart: string;
 let leaveEnd: string;
 
+// Input leave
 app.action("inputLeave", async ({ ack, body, client }) => {
   await ack();
 
@@ -155,7 +167,8 @@ app.action("inputLeave", async ({ ack, body, client }) => {
   } catch (error) {}
 });
 
-app.action("listLeave", async ({ ack, body, client }) => {
+// List leave
+app.action("listLeave", async ({ ack, client }) => {
   await ack();
 
   try {
@@ -165,37 +178,19 @@ app.action("listLeave", async ({ ack, body, client }) => {
       return;
     }
 
-    interface LeaveList {
-      userId: string;
-      name: string;
-      leavePeriod: string[];
-    }
-    let leaveList: LeaveList[] = [];
-    Items.forEach((el) => {
-      const index = leaveList.findIndex((user) => user.userId === el.userId);
-      if (index === -1) {
-        leaveList.push({
-          userId: el.userId,
-          name: el.userName,
-          leavePeriod: [`${el.leaveStart} to ${el.leaveEnd}`],
-        });
-      }
-      if (index >= 0) {
-        leaveList[index].leavePeriod.push(`${el.leaveStart} to ${el.leaveEnd}`);
-      }
-    });
-
-    console.log("payload: ", leaveList);
+    const leaveList = formatLeaveList(Items);
 
     let displayAllLeaveText = "";
 
     leaveList.forEach((user) => {
-      displayAllLeaveText += user.name + "\n";
+      displayAllLeaveText += user.name + " 🏝\n";
       user.leavePeriod.sort().forEach((leave) => {
         displayAllLeaveText += leave + "\n";
       });
+      displayAllLeaveText += "\n";
     });
 
+    // TODO use say()
     client.chat.postMessage({
       channel: "#noise",
       text: "listing all the leave",
@@ -213,6 +208,59 @@ app.action("listLeave", async ({ ack, body, client }) => {
 });
 
 // TODO delete leave
+app.action("deleteLeave", async ({ ack, say }) => {
+  await ack();
+
+  say({
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: "rsutti",
+          emoji: true,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "2020-04-20 to 2020-04-22",
+        },
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Delete",
+            emoji: true,
+          },
+          value: "click_me_123",
+          action_id: "button-action",
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "2020-04-20 to 2020-04-22",
+        },
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Delete",
+            emoji: true,
+          },
+          value: "click_me_123",
+          action_id: "button-action",
+        },
+      },
+    ],
+  });
+
+  try {
+  } catch (err) {}
+});
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
