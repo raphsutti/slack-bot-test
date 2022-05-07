@@ -76,16 +76,11 @@ app.command("/leavebot", async ({ ack, say }) => {
             value: "input-leave",
             action_id: "inputLeave",
           },
-        ],
-      },
-      {
-        type: "actions",
-        elements: [
           {
             type: "button",
             text: {
               type: "plain_text",
-              text: "😌 Who's on leave?",
+              text: "👀 show me everyone's leave",
               emoji: true,
             },
             value: "list-leave",
@@ -160,8 +155,6 @@ app.action("inputLeave", async ({ ack, body, client }) => {
   } catch (error) {}
 });
 
-// TODO list all leave
-// ? show profile pic
 app.action("listLeave", async ({ ack, body, client }) => {
   await ack();
 
@@ -194,25 +187,32 @@ app.action("listLeave", async ({ ack, body, client }) => {
 
     console.log("payload: ", leaveList);
 
+    let displayAllLeaveText = "";
+
+    leaveList.forEach((user) => {
+      displayAllLeaveText += user.name + "\n";
+      user.leavePeriod.sort().forEach((leave) => {
+        displayAllLeaveText += leave + "\n";
+      });
+    });
+
     client.chat.postMessage({
       channel: "#noise",
       text: "listing all the leave",
       blocks: [
         {
-          type: "context",
-          elements: [
-            {
-              type: "plain_text",
-              // TODO format display message nicely
-              text: JSON.stringify(leaveList),
-              emoji: true,
-            },
-          ],
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: displayAllLeaveText,
+          },
         },
       ],
     });
   } catch (error) {}
 });
+
+// TODO delete leave
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
@@ -257,12 +257,9 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
   } catch (error) {}
 });
 
-// TODO show current leave user activated
-// TODO show current leave cron
+// TODO show who is on leave today cron job @ 8am
 
-// TODO remove leave user activated
-
-// TODO remove old leave from db
+// TODO remove old leave from db cron job every week
 
 export const handler = async (event: AwsEvent, context: any, callback: any) => {
   const receiver = await awsLambdaReceiver.start();
