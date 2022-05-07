@@ -1,8 +1,4 @@
-import {
-  DocumentClient,
-  ScanInput,
-  ScanOutput,
-} from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { v4 as uuidV4 } from "uuid";
 
 const DYNAMO_TABLE = "athena-leave";
@@ -37,6 +33,17 @@ export const putDynamoItem = (data: Leave) => {
 export const scanDynamo = () =>
   client.scan({ TableName: DYNAMO_TABLE }).promise();
 
+export const deleteItemDynamo = (id: string) => {
+  client
+    .delete({
+      TableName: DYNAMO_TABLE,
+      Key: {
+        id,
+      },
+    })
+    .promise();
+};
+
 // Testing
 const data: Leave = {
   userName: "rsutti",
@@ -47,4 +54,5 @@ const data: Leave = {
 try {
   // scanDynamo();
   // putDynamoItem(data);
+  // deleteItemDynamo("8c84c06b-8bf5-4073-af73-ad97bf982c94");
 } catch (err) {}
