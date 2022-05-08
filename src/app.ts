@@ -91,7 +91,7 @@ app.command("/leavebot", async ({ ack, say }) => {
             type: "button",
             text: {
               type: "plain_text",
-              text: "🙅‍♂️ Delete leave entry",
+              text: "🙅 Delete leave entry",
               emoji: true,
             },
             value: "delete-leave",
@@ -114,7 +114,7 @@ app.action("inputLeave", async ({ ack, body, client }) => {
 
   try {
     const result = await client.views.open({
-      trigger_id: body.trigger_id,
+      trigger_id: (body as BlockAction).trigger_id,
       view: {
         type: "modal",
         callback_id: "viewSelectDateRange",
@@ -220,57 +220,53 @@ app.action("deleteLeave", async ({ ack, say }) => {
 
   const leaveList = formatLeaveList(Items);
 
-  // TODO display each leave entries with buttons
+  let blocks: any[] = [];
+
+  leaveList.forEach((user) => {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: user.name,
+        emoji: true,
+      },
+    });
+
+    const leaveBlocks = user.leavePeriod.map(({ id, leave }) => {
+      return {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: leave,
+        },
+        // TODO make button red
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Delete",
+            emoji: true,
+          },
+          value: `delete-${id}`,
+          action_id: id,
+        },
+      };
+    });
+
+    blocks.push(...leaveBlocks);
+  });
+
+  console.log("blocks: ", JSON.stringify(blocks));
+
   say({
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "plain_text",
-          text: "rsutti",
-          emoji: true,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "2020-04-20 to 2020-04-22",
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Delete",
-            emoji: true,
-          },
-          value: "click_me_123",
-          action_id: "button-action",
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: "2020-04-20 to 2020-04-22",
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Delete",
-            emoji: true,
-          },
-          value: "click_me_123",
-          action_id: "button-action",
-        },
-      },
-    ],
+    blocks,
   });
 
   try {
   } catch (err) {}
 });
+
+// TODO delete action Dynamo
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
