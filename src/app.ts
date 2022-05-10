@@ -168,7 +168,7 @@ app.action("inputLeave", async ({ ack, body, client }) => {
 });
 
 // List leave
-app.action("listLeave", async ({ ack, client }) => {
+app.action("listLeave", async ({ ack, say }) => {
   await ack();
 
   try {
@@ -191,9 +191,7 @@ app.action("listLeave", async ({ ack, client }) => {
       displayAllLeaveText += "\n";
     });
 
-    // TODO use say()
-    client.chat.postMessage({
-      channel: "#noise",
+    say({
       text: "listing all the leave",
       blocks: [
         {
@@ -256,8 +254,6 @@ app.action("deleteLeave", async ({ ack, say }) => {
     blocks.push(...leaveBlocks);
   });
 
-  console.log("blocks: ", JSON.stringify(blocks));
-
   say({
     blocks,
   });
@@ -298,6 +294,7 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
 
     await client.chat.postMessage({
       channel: "#noise",
+      // TODO format leave date range
       text: `<@${body.user.id}> has entered leave 🏝\nStart: ${leaveStart}\nEnd: ${leaveEnd}`,
     });
 
