@@ -127,7 +127,6 @@ export const convertLeaveByUserToBlocks = (
         type: "mrkdwn",
         text: leave,
       },
-      // TODO make button red
       accessory: {
         type: "button",
         text: {
@@ -135,6 +134,7 @@ export const convertLeaveByUserToBlocks = (
           text: "Delete",
           emoji: true,
         },
+        style: "danger",
         value: `delete-${id}`,
         action_id: id,
       },
