@@ -7,7 +7,7 @@ import {
   BasicElementAction,
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
-import { putDynamoItem, scanDynamo } from "./dynamo";
+import { deleteItemDynamo, putDynamoItem, scanDynamo } from "./dynamo";
 import { formatDate } from "./formatDate";
 import {
   convertLeaveByUserToBlocks,
@@ -99,8 +99,8 @@ app.command("/leavebot", async ({ ack, say }) => {
               text: "🙅 Delete leave entry",
               emoji: true,
             },
-            value: "delete-leave",
-            action_id: "deleteLeave",
+            value: "delete-leave-list",
+            action_id: "deleteLeaveList",
           },
         ],
       },
@@ -201,8 +201,8 @@ app.action("listLeave", async ({ ack, say }) => {
   } catch (error) {}
 });
 
-// TODO delete leave
-app.action("deleteLeave", async ({ ack, say }) => {
+// List leave to delete
+app.action("deleteLeaveList", async ({ ack, body, client }) => {
   await ack();
 
   const { Items } = await scanDynamo();
@@ -211,15 +211,29 @@ app.action("deleteLeave", async ({ ack, say }) => {
     return;
   }
 
-  say({
-    blocks: convertLeaveByUserToBlocks(groupLeaveByUser(Items)),
-  });
-
+  // TODO refresh list after delete complete
   try {
-  } catch (err) {}
+    await client.views.open({
+      trigger_id: (body as BlockAction).trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "deleteLeaveList",
+        title: {
+          type: "plain_text",
+          text: "Delete leave",
+        },
+        blocks: convertLeaveByUserToBlocks(groupLeaveByUser(Items, true)),
+      },
+    });
+  } catch (error) {}
 });
 
-// TODO delete action Dynamo
+app.action("deleteLeave", async ({ ack, body }) => {
+  ack();
+
+  const id = (body as any).actions[0].value;
+  deleteItemDynamo(id);
+});
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();

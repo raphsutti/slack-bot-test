@@ -8,7 +8,8 @@ interface LeaveByUser {
 }
 
 export const groupLeaveByUser = (
-  items: DocumentClient.ItemList
+  items: DocumentClient.ItemList,
+  withYear = false
 ): LeaveByUser[] => {
   let leaveByUser: LeaveByUser[] = [];
 
@@ -52,7 +53,7 @@ export const groupLeaveByUser = (
             ...user,
             leave: user.leave
               .split(",")
-              .map((date) => formatDate(date))
+              .map((date) => formatDate(date, withYear))
               .join("-"),
           };
         }),
@@ -76,6 +77,9 @@ export const displayUserLeaveInText = (leaveByUser: LeaveByUser[]): string => {
   return displayAllLeaveInText;
 };
 
+interface DividerBlock {
+  type: string;
+}
 interface UserBlock {
   type: string;
   text: {
@@ -102,7 +106,7 @@ interface LeaveBlock {
   };
 }
 
-type DeleteBlocks = (LeaveBlock | UserBlock)[];
+type DeleteBlocks = (DividerBlock | LeaveBlock | UserBlock)[];
 
 export const convertLeaveByUserToBlocks = (
   leaveByUser: LeaveByUser[]
@@ -112,7 +116,10 @@ export const convertLeaveByUserToBlocks = (
   leaveByUser.forEach((user) => {
     // Create user block
     blocks.push({
-      type: "section",
+      type: "divider",
+    });
+    blocks.push({
+      type: "header",
       text: {
         type: "plain_text",
         text: user.name,
@@ -135,8 +142,8 @@ export const convertLeaveByUserToBlocks = (
           emoji: true,
         },
         style: "danger",
-        value: `delete-${id}`,
-        action_id: id,
+        value: id,
+        action_id: "deleteLeave",
       },
     }));
 
