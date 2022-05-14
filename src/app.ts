@@ -108,6 +108,7 @@ app.command("/leavebot", async ({ ack, say }) => {
   });
 });
 
+// TODO remove globals 🤮
 let leaveStart: string;
 let leaveEnd: string;
 
