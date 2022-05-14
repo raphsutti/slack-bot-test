@@ -8,7 +8,12 @@ import {
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
 import { putDynamoItem, scanDynamo } from "./dynamo";
-import { displayUserLeaveInText, groupLeaveByUser } from "./groupLeaveByUser";
+import { formatDate } from "./formatDate";
+import {
+  convertLeaveByUserToBlocks,
+  displayUserLeaveInText,
+  groupLeaveByUser,
+} from "./groupLeaveByUser";
 
 interface DateSelectionAction extends BasicElementAction {
   selected_date: string;
@@ -175,7 +180,6 @@ app.action("listLeave", async ({ ack, say }) => {
   try {
     const { Items } = await scanDynamo();
 
-    // No entries
     if (!Items) {
       return;
     }
@@ -207,46 +211,8 @@ app.action("deleteLeave", async ({ ack, say }) => {
     return;
   }
 
-  const leaveList = groupLeaveByUser(Items);
-
-  let blocks: any[] = [];
-
-  leaveList.forEach((user) => {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: user.name,
-        emoji: true,
-      },
-    });
-
-    const leaveBlocks = user.leaveList.map(({ id, leave }) => {
-      return {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: leave,
-        },
-        // TODO make button red
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Delete",
-            emoji: true,
-          },
-          value: `delete-${id}`,
-          action_id: id,
-        },
-      };
-    });
-
-    blocks.push(...leaveBlocks);
-  });
-
   say({
-    blocks,
+    blocks: convertLeaveByUserToBlocks(groupLeaveByUser(Items)),
   });
 
   try {
@@ -257,17 +223,14 @@ app.action("deleteLeave", async ({ ack, say }) => {
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
-
   leaveStart = ((body as BlockAction).actions[0] as DateSelectionAction)
     .selected_date;
-  console.log("leaveStart: ", leaveStart);
 });
 
 app.action("leaveEndDate", async ({ ack, body }) => {
   await ack();
   leaveEnd = ((body as BlockAction).actions[0] as DateSelectionAction)
     .selected_date;
-  console.log("leaveEnd: ", leaveEnd);
 });
 
 app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
@@ -285,8 +248,10 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
 
     await client.chat.postMessage({
       channel: "#noise",
-      // TODO format leave date range
-      text: `<@${body.user.id}> has entered leave 🏝\nStart: ${leaveStart}\nEnd: ${leaveEnd}`,
+      text: `<@${body.user.id}> has entered leave 🏝\nStart: ${formatDate(
+        leaveStart,
+        true
+      )}\nEnd: ${formatDate(leaveEnd, true)}`,
     });
 
     const { id, name } = body.user;

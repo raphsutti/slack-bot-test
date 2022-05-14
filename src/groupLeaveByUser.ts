@@ -61,7 +61,7 @@ export const groupLeaveByUser = (
 };
 
 // Display user leave text: user1 \n leave1 \n leave2 user2 \n leave1 \n leave2
-export const displayUserLeaveInText = (leaveByUser: LeaveByUser[]) => {
+export const displayUserLeaveInText = (leaveByUser: LeaveByUser[]): string => {
   let displayAllLeaveInText = "";
 
   leaveByUser.forEach((user) => {
@@ -74,4 +74,74 @@ export const displayUserLeaveInText = (leaveByUser: LeaveByUser[]) => {
   });
 
   return displayAllLeaveInText;
+};
+
+interface UserBlock {
+  type: string;
+  text: {
+    type: string;
+    text: string;
+    emoji: boolean;
+  };
+}
+interface LeaveBlock {
+  type: string;
+  text: {
+    type: string;
+    text: string;
+  };
+  accessory: {
+    type: string;
+    text: {
+      type: string;
+      text: string;
+      emoji: boolean;
+    };
+    value: string;
+    action_id: string;
+  };
+}
+
+type DeleteBlocks = (LeaveBlock | UserBlock)[];
+
+export const convertLeaveByUserToBlocks = (
+  leaveByUser: LeaveByUser[]
+): DeleteBlocks => {
+  let blocks: DeleteBlocks = [];
+
+  leaveByUser.forEach((user) => {
+    // Create user block
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: user.name,
+        emoji: true,
+      },
+    });
+
+    // Create leave blocks with delete buttons
+    const leaveBlocks = user.leaveList.map(({ id, leave }) => ({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: leave,
+      },
+      // TODO make button red
+      accessory: {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Delete",
+          emoji: true,
+        },
+        value: `delete-${id}`,
+        action_id: id,
+      },
+    }));
+
+    blocks.push(...leaveBlocks);
+  });
+
+  return blocks;
 };
