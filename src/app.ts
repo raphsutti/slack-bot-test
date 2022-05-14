@@ -8,14 +8,14 @@ import {
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
 import { putDynamoItem, scanDynamo } from "./dynamo";
-import { formatLeaveList } from "./formatLeaveList";
+import { displayUserLeaveInText, groupLeaveByUser } from "./groupLeaveByUser";
 
 interface DateSelectionAction extends BasicElementAction {
   selected_date: string;
 }
 
 if (!process.env.SLACK_SIGNING_SECRET) {
-  throw Error("no SLACK_SIGNING_SECRET");
+  throw Error("No SLACK_SIGNING_SECRET");
 }
 
 const awsLambdaReceiver = new AwsLambdaReceiver({
@@ -110,10 +110,11 @@ let leaveEnd: string;
 app.action("inputLeave", async ({ ack, body, client }) => {
   await ack();
 
+  // Today in yyyy-mm-dd format
   const today = new Date().toISOString().slice(0, 10);
 
   try {
-    const result = await client.views.open({
+    await client.views.open({
       trigger_id: (body as BlockAction).trigger_id,
       view: {
         type: "modal",
@@ -174,22 +175,12 @@ app.action("listLeave", async ({ ack, say }) => {
   try {
     const { Items } = await scanDynamo();
 
+    // No entries
     if (!Items) {
       return;
     }
 
-    const leaveList = formatLeaveList(Items);
-
-    let displayAllLeaveText = "";
-
-    leaveList.forEach((user) => {
-      displayAllLeaveText += user.name + " 🏝\n";
-      user.leavePeriod.forEach(({ leave }) => {
-        displayAllLeaveText += leave + "\n";
-      });
-
-      displayAllLeaveText += "\n";
-    });
+    const displayAllLeaveText = displayUserLeaveInText(groupLeaveByUser(Items));
 
     say({
       text: "listing all the leave",
@@ -216,7 +207,7 @@ app.action("deleteLeave", async ({ ack, say }) => {
     return;
   }
 
-  const leaveList = formatLeaveList(Items);
+  const leaveList = groupLeaveByUser(Items);
 
   let blocks: any[] = [];
 
@@ -230,7 +221,7 @@ app.action("deleteLeave", async ({ ack, say }) => {
       },
     });
 
-    const leaveBlocks = user.leavePeriod.map(({ id, leave }) => {
+    const leaveBlocks = user.leaveList.map(({ id, leave }) => {
       return {
         type: "section",
         text: {

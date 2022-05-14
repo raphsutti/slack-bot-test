@@ -14,6 +14,7 @@ interface Leave {
 
 const client = new DocumentClient({ region: "ap-southeast-2" });
 
+// TODO use query instead
 export const putDynamoItem = (data: Leave) => {
   const params = {
     TableName: DYNAMO_TABLE,
