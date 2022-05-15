@@ -106,6 +106,8 @@ app.command("/leavebot", async ({ ack, say }) => {
       },
     ],
   });
+
+  return;
 });
 
 // TODO remove globals 🤮
@@ -113,7 +115,7 @@ let leaveStart: string;
 let leaveEnd: string;
 
 // Input leave
-app.action("inputLeave", async ({ ack, body, client }) => {
+app.action("inputLeave", async ({ ack, body, client, logger }) => {
   await ack();
 
   // Today in yyyy-mm-dd format
@@ -171,11 +173,14 @@ app.action("inputLeave", async ({ ack, body, client }) => {
         },
       },
     });
-  } catch (error) {}
+  } catch (error) {
+    logger.error(error, "Failed to open input leave modal");
+  }
+  return;
 });
 
 // List leave
-app.action("listLeave", async ({ ack, say }) => {
+app.action("listLeave", async ({ ack, say, logger }) => {
   await ack();
 
   try {
@@ -199,11 +204,14 @@ app.action("listLeave", async ({ ack, say }) => {
         },
       ],
     });
-  } catch (error) {}
+  } catch (error) {
+    logger.error(error, "failed to list all leave");
+  }
+  return;
 });
 
 // List leave to delete
-app.action("deleteLeaveList", async ({ ack, body, client }) => {
+app.action("deleteLeaveList", async ({ ack, body, client, logger }) => {
   await ack();
 
   const { Items } = await scanDynamo();
@@ -226,7 +234,11 @@ app.action("deleteLeaveList", async ({ ack, body, client }) => {
         blocks: convertLeaveByUserToBlocks(groupLeaveByUser(Items, true)),
       },
     });
-  } catch (error) {}
+  } catch (error) {
+    logger.error(error, "Failed to open delete leave list modal");
+  }
+
+  return;
 });
 
 app.action("deleteLeave", async ({ ack, body }) => {
@@ -234,18 +246,24 @@ app.action("deleteLeave", async ({ ack, body }) => {
 
   const id = (body as any).actions[0].value;
   deleteItemDynamo(id);
+
+  return;
 });
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
   leaveStart = ((body as BlockAction).actions[0] as DateSelectionAction)
     .selected_date;
+
+  return;
 });
 
 app.action("leaveEndDate", async ({ ack, body }) => {
   await ack();
   leaveEnd = ((body as BlockAction).actions[0] as DateSelectionAction)
     .selected_date;
+
+  return;
 });
 
 app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
@@ -276,7 +294,10 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
       leaveStart,
       leaveEnd,
     });
-  } catch (error) {}
+  } catch (error) {
+    logger.error(error, "Failed to put new leave entry to Dynamo");
+  }
+  return;
 });
 
 // TODO show who is on leave today cron job @ 8am
