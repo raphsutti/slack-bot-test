@@ -14,7 +14,6 @@ interface Leave {
 
 const client = new DocumentClient({ region: "ap-southeast-2" });
 
-// TODO use query instead
 export const putDynamoItem = (data: Leave) => {
   const params = {
     TableName: DYNAMO_TABLE,
@@ -34,6 +33,7 @@ export const putDynamoItem = (data: Leave) => {
 export const scanDynamo = () =>
   client.scan({ TableName: DYNAMO_TABLE }).promise();
 
+// TODO use query Dynamo instead
 export const deleteItemDynamo = (id: string) => {
   client
     .delete({
