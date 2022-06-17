@@ -241,11 +241,37 @@ app.action("deleteLeaveList", async ({ ack, body, client, logger }) => {
   return;
 });
 
-app.action("deleteLeave", async ({ ack, body }) => {
+app.action("deleteLeave", async ({ ack, body, client, logger }) => {
   ack();
 
   const id = (body as any).actions[0].value;
-  deleteItemDynamo(id);
+  await deleteItemDynamo(id);
+
+  const { Items } = await scanDynamo();
+
+  if (!Items) {
+    return;
+  }
+
+  console.log((body as BlockAction).view?.id);
+
+  try {
+    await client.views.update({
+      response_action: "update",
+      view_id: (body as BlockAction).view?.id,
+      view: {
+        type: "modal",
+        callback_id: "deleteLeaveList",
+        title: {
+          type: "plain_text",
+          text: "Delete leave",
+        },
+        blocks: convertLeaveByUserToBlocks(groupLeaveByUser(Items, true)),
+      },
+    });
+  } catch (error) {
+    logger.error(error, "Failed to open delete leave list modal");
+  }
 
   return;
 });

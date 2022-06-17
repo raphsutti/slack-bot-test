@@ -34,7 +34,7 @@ export const scanDynamo = () =>
   client.scan({ TableName: DYNAMO_TABLE }).promise();
 
 // TODO use query Dynamo instead
-export const deleteItemDynamo = (id: string) => {
+export const deleteItemDynamo = (id: string) =>
   client
     .delete({
       TableName: DYNAMO_TABLE,
@@ -43,7 +43,6 @@ export const deleteItemDynamo = (id: string) => {
       },
     })
     .promise();
-};
 
 // Testing
 const data: Leave = {
