@@ -220,7 +220,6 @@ app.action("deleteLeaveList", async ({ ack, body, client, logger }) => {
     return;
   }
 
-  // TODO refresh list after delete complete
   try {
     await client.views.open({
       trigger_id: (body as BlockAction).trigger_id,
@@ -304,11 +303,14 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
       logger.error("Missing leave start or leave end date");
       return;
     }
+    const { user } = await client.users.info({
+      user: body.user.id,
+    });
 
     const { id, name } = body.user;
     putDynamoItem({
       userId: id,
-      userName: name,
+      userName: user?.real_name ?? name,
       leaveStart,
       leaveEnd,
     });
