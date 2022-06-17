@@ -65,9 +65,12 @@ app.message("hello", async ({ message, say }) => {
 });
 
 // Leave bot
-app.command("/leavebot", async ({ ack, say }) => {
+app.command("/leavebot", async ({ ack, body, client }) => {
   await ack();
-  await say({
+
+  await client.chat.postEphemeral({
+    channel: "#noise",
+    user: body.user_id,
     blocks: [
       {
         type: "actions",
