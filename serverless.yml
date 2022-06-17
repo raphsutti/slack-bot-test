@@ -14,8 +14,24 @@ functions:
     handler: src/app.handler
     events:
       - http:
-          path: slack/events
+          path: /
           method: post
+
+resources:
+  Resources:
+    athenaLeaveTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: athena-leave
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 plugins:
   - serverless-esbuild
