@@ -192,7 +192,7 @@ app.action("listLeave", async ({ ack, say, logger }) => {
 
     const displayAllLeaveText = displayUserLeaveInText(groupLeaveByUser(Items));
 
-    say({
+    await say({
       text: "listing all the leave",
       blocks: [
         {
@@ -279,20 +279,20 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
       return;
     }
 
-    await client.chat.postMessage({
-      channel: "#noise",
-      text: `<@${body.user.id}> has entered leave 🏝\nStart: ${formatDate(
-        leaveStart,
-        true
-      )}\nEnd: ${formatDate(leaveEnd, true)}`,
-    });
-
     const { id, name } = body.user;
     putDynamoItem({
       userId: id,
       userName: name,
       leaveStart,
       leaveEnd,
+    });
+
+    await client.chat.postMessage({
+      channel: "#noise",
+      text: `<@${body.user.id}> has entered leave 🏝\nStart: ${formatDate(
+        leaveStart,
+        true
+      )}\nEnd: ${formatDate(leaveEnd, true)}`,
     });
   } catch (error) {
     logger.error(error, "Failed to put new leave entry to Dynamo");
