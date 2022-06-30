@@ -33,6 +33,8 @@ const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
 
+const channel = "#noise";
+
 // Listens to incoming messages that contain "hello"
 app.message("hello", async ({ message, say }) => {
   const isGenericMessageEvent = (
@@ -69,7 +71,7 @@ app.command("/leavebot", async ({ ack, body, client }) => {
   await ack();
 
   await client.chat.postEphemeral({
-    channel: "#noise",
+    channel,
     user: body.user_id,
     blocks: [
       {
@@ -183,7 +185,7 @@ app.action("inputLeave", async ({ ack, body, client, logger }) => {
 });
 
 // List leave
-app.action("listLeave", async ({ ack, say, logger }) => {
+app.action("listLeave", async ({ ack, logger, client, body }) => {
   await ack();
 
   try {
@@ -195,7 +197,9 @@ app.action("listLeave", async ({ ack, say, logger }) => {
 
     const displayAllLeaveText = displayUserLeaveInText(groupLeaveByUser(Items));
 
-    await say({
+    await client.chat.postEphemeral({
+      user: body.user.id,
+      channel,
       text: "listing all the leave",
       blocks: [
         {
@@ -319,7 +323,7 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
     });
 
     await client.chat.postMessage({
-      channel: "#noise",
+      channel,
       text: `<@${body.user.id}> has entered leave 🏝\nStart: ${formatDate(
         leaveStart,
         true
