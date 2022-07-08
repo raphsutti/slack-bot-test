@@ -35,37 +35,6 @@ const app = new App({
 
 const channel = "#athena-leave-bot";
 
-// Listens to incoming messages that contain "hello"
-app.message("hello", async ({ message, say }) => {
-  const isGenericMessageEvent = (
-    msg: MessageEvent
-  ): msg is GenericMessageEvent =>
-    (msg as GenericMessageEvent).subtype === undefined;
-
-  if (!isGenericMessageEvent(message)) return;
-
-  await say({
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `Hey there <@${message.user}>!`,
-        },
-        accessory: {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Click Me",
-          },
-          action_id: "button_click",
-        },
-      },
-    ],
-    text: `Hey there <@${message.user}>!`,
-  });
-});
-
 // Leave bot
 app.command("/leavebot", async ({ ack, body, client }) => {
   await ack();
