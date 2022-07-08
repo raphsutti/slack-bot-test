@@ -13,6 +13,9 @@ export const groupLeaveByUser = (
 ): LeaveByUser[] => {
   let leaveByUser: LeaveByUser[] = [];
 
+  // Sort by more recent leave dates first
+  items.sort((a, b) => Date.parse(a.leaveStart) - Date.parse(b.leaveStart));
+
   items.forEach((item) => {
     const index = leaveByUser.findIndex((user) => user.userId === item.userId);
 
