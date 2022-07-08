@@ -33,7 +33,7 @@ const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
 
-const channel = "#noise";
+const channel = "#athena-leave-bot";
 
 // Listens to incoming messages that contain "hello"
 app.message("hello", async ({ message, say }) => {
@@ -247,6 +247,7 @@ app.action("deleteLeaveList", async ({ ack, body, client, logger }) => {
   return;
 });
 
+// TODO announce who's leave got deleted similar to when leave got entered
 app.action("deleteLeave", async ({ ack, body, client, logger }) => {
   ack();
 

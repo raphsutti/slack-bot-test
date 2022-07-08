@@ -30,10 +30,10 @@ export const putDynamoItem = (data: Leave) => {
   });
 };
 
+// TODO use query Dynamo instead
 export const scanDynamo = () =>
   client.scan({ TableName: DYNAMO_TABLE }).promise();
 
-// TODO use query Dynamo instead
 export const deleteItemDynamo = (id: string) =>
   client
     .delete({
