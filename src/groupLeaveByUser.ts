@@ -209,17 +209,26 @@ export const mondayAndFridayNextWeek = () => {
 
 export const startAndEndOfMonth = () => {
   const today = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 2)
-    .toISOString()
-    .slice(0, 10);
-
-  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-    .toISOString()
-    .slice(0, 10);
 
   return {
-    firstDay,
-    lastDay,
+    firstDay: new Date(today.getFullYear(), today.getMonth(), 2)
+      .toISOString()
+      .slice(0, 10),
+    lastDay: new Date(today.getFullYear(), today.getMonth() + 1, 1)
+      .toISOString()
+      .slice(0, 10),
+  };
+};
+
+export const startAndEndOfNextMonth = () => {
+  const today = new Date();
+  return {
+    firstDay: new Date(today.getFullYear(), today.getMonth() + 1, 2)
+      .toISOString()
+      .slice(0, 10),
+    lastDay: new Date(today.getFullYear(), today.getMonth() + 2, 1)
+      .toISOString()
+      .slice(0, 10),
   };
 };
 
