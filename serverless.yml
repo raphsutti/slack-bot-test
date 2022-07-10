@@ -16,6 +16,11 @@ functions:
       - http:
           path: /
           method: post
+  cron:
+    handler: src/cron.startOfWeek
+    events:
+      # 10pm every Sunday UTC (8am every Monday AEST) 
+      - schedule: cron(0 22 ? * SUN *)
 
 resources:
   Resources:

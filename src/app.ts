@@ -364,9 +364,6 @@ app.action("listLeave", async ({ ack, logger, client, body }) => {
     if (!Items) {
       return;
     }
-    console.log("Items: ", Items);
-    console.log(JSON.stringify(groupLeaveByUser(Items)));
-
     const displayAllLeaveText = displayUserLeaveInText(groupLeaveByUser(Items));
 
     await client.chat.postEphemeral({
@@ -499,8 +496,6 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
   }
   return;
 });
-
-// TODO show who is on leave today cron job @ 8am
 
 // TODO remove old leave from db cron job every week
 

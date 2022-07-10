@@ -279,7 +279,7 @@ export const filterLeaveByDateRange = (
 // TODO implement with daily cron job
 export const filterLeaveToday = (leaveByUser: Leave[]) => {
   const todayString = new Date().toISOString().slice(0, 10);
-  const onLeaveToday = leaveByUser.filter(
+  return leaveByUser.filter(
     (leave) =>
       Date.parse(todayString) >= Date.parse(leave.leaveStart) &&
       Date.parse(todayString) <= Date.parse(leave.leaveEnd)
