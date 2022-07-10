@@ -1,4 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { Leave } from "./dynamo";
 import { formatDate } from "./formatDate";
 
 interface LeaveByUser {
@@ -154,4 +155,124 @@ export const convertLeaveByUserToBlocks = (
   });
 
   return blocks;
+};
+
+export const mondayAndFriday = () => {
+  const currentDay = new Date();
+  // New week starts when it is Sunday
+  // This week monday
+  const monday = new Date(
+    currentDay.setDate(currentDay.getDate() - currentDay.getDay() + 1)
+  )
+    .toISOString()
+    .slice(0, 10);
+  // This week friday
+  const friday = new Date(
+    currentDay.setDate(currentDay.getDate() - currentDay.getDay() + 5)
+  )
+    .toISOString()
+    .slice(0, 10);
+  return {
+    monday,
+    friday,
+  };
+};
+
+export const mondayAndFridayNextWeek = () => {
+  const currentDay = new Date();
+
+  const nextWeekCurrentDay = new Date(
+    currentDay.setDate(currentDay.getDate() + 7)
+  );
+  // New week starts when it is Sunday
+  // This week monday
+  const monday = new Date(
+    nextWeekCurrentDay.setDate(
+      nextWeekCurrentDay.getDate() - nextWeekCurrentDay.getDay() + 1
+    )
+  )
+    .toISOString()
+    .slice(0, 10);
+  // This week friday
+  const friday = new Date(
+    nextWeekCurrentDay.setDate(
+      nextWeekCurrentDay.getDate() - nextWeekCurrentDay.getDay() + 5
+    )
+  )
+    .toISOString()
+    .slice(0, 10);
+  return {
+    monday,
+    friday,
+  };
+};
+
+export const startAndEndOfMonth = () => {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 2)
+    .toISOString()
+    .slice(0, 10);
+
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+    .toISOString()
+    .slice(0, 10);
+
+  return {
+    firstDay,
+    lastDay,
+  };
+};
+
+export const generateDatesList = (startDate: Date, endDate: Date) => {
+  const date = new Date(startDate.getTime());
+  const dates = [];
+
+  while (date <= endDate) {
+    dates.push(new Date(date).toISOString().slice(0, 10));
+    date.setDate(date.getDate() + 1);
+  }
+
+  return dates;
+};
+
+export const isWithinDateRange = (
+  inputDate: string,
+  filterStart: string,
+  filterEnd: string
+) =>
+  Date.parse(inputDate) >= Date.parse(filterStart) &&
+  Date.parse(inputDate) <= Date.parse(filterEnd);
+
+export const filterLeaveByDateRange = (
+  start: string,
+  end: string,
+  leaveByUser: Leave[]
+) =>
+  leaveByUser.filter((leave) => {
+    const dateList = generateDatesList(
+      new Date(leave.leaveStart),
+      new Date(leave.leaveEnd)
+    );
+
+    // TODO this is not very efficient and will probably die for a big date range of leave dates
+    // Check each leave date if they fall inside the filter range
+    let i = 0;
+    let found = false;
+    do {
+      if (isWithinDateRange(dateList[i], start, end)) {
+        found = true;
+      }
+      i++;
+    } while (!found && i <= dateList.length);
+    return found;
+  });
+
+// TODO implement with daily cron job
+export const filterLeaveToday = (leaveByUser: Leave[]) => {
+  const todayString = new Date().toISOString().slice(0, 10);
+  const onLeaveToday = leaveByUser.filter(
+    (leave) =>
+      Date.parse(todayString) >= Date.parse(leave.leaveStart) &&
+      Date.parse(todayString) <= Date.parse(leave.leaveEnd)
+  );
 };

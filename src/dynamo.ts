@@ -5,7 +5,7 @@ const DYNAMO_TABLE = "athena-leave";
 
 // TODO add leave details
 // ? add profile pic link
-interface Leave {
+export interface Leave {
   userId: string;
   userName: string;
   leaveStart: string;
@@ -43,16 +43,3 @@ export const deleteItemDynamo = (id: string) =>
       },
     })
     .promise();
-
-// Testing
-const data: Leave = {
-  userName: "rsutti",
-  userId: "U03CH0NRR9Q",
-  leaveStart: "2022-06-26",
-  leaveEnd: "2022-07-30",
-};
-try {
-  // scanDynamo();
-  // putDynamoItem(data);
-  // deleteItemDynamo("8c84c06b-8bf5-4073-af73-ad97bf982c94");
-} catch (err) {}

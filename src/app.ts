@@ -1,18 +1,21 @@
 import {
   App,
   AwsLambdaReceiver,
-  MessageEvent,
-  GenericMessageEvent,
   BlockAction,
   BasicElementAction,
+  BlockRadioButtonsAction,
 } from "@slack/bolt";
 import { AwsEvent } from "@slack/bolt/dist/receivers/AwsLambdaReceiver";
-import { deleteItemDynamo, putDynamoItem, scanDynamo } from "./dynamo";
+import { deleteItemDynamo, Leave, putDynamoItem, scanDynamo } from "./dynamo";
 import { formatDate } from "./formatDate";
 import {
   convertLeaveByUserToBlocks,
   displayUserLeaveInText,
+  filterLeaveByDateRange,
   groupLeaveByUser,
+  mondayAndFriday,
+  mondayAndFridayNextWeek,
+  startAndEndOfMonth,
 } from "./groupLeaveByUser";
 
 interface DateSelectionAction extends BasicElementAction {
@@ -76,6 +79,16 @@ app.command("/leavebot", async ({ ack, body, client }) => {
             value: "delete-leave-list",
             action_id: "deleteLeaveList",
           },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "🔎 Show me filtered leave dates",
+              emoji: true,
+            },
+            value: "filter-leave-display",
+            action_id: "filterLeaveDisplay",
+          },
         ],
       },
     ],
@@ -84,9 +97,201 @@ app.command("/leavebot", async ({ ack, body, client }) => {
   return;
 });
 
-// TODO remove globals 🤮
-let leaveStart: string;
-let leaveEnd: string;
+// Modal for filtered leave option
+app.action("filterLeaveDisplay", async ({ ack, body, client, logger }) => {
+  await ack();
+
+  // Today in yyyy-mm-dd format
+  const today = new Date().toISOString().slice(0, 10);
+
+  try {
+    await client.views.open({
+      trigger_id: (body as BlockAction).trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "filterLeaveList",
+        title: {
+          type: "plain_text",
+          text: "Filter leave",
+        },
+        blocks: [
+          {
+            type: "section",
+            block_id: "presetDateRadioButton",
+            text: {
+              type: "mrkdwn",
+              text: "Select preset date range",
+            },
+            accessory: {
+              type: "radio_buttons",
+              options: [
+                {
+                  text: {
+                    type: "plain_text",
+                    text: "This week",
+                    emoji: true,
+                  },
+                  value: "thisWeek",
+                },
+                {
+                  text: {
+                    type: "plain_text",
+                    text: "Next week",
+                    emoji: true,
+                  },
+                  value: "nextWeek",
+                },
+                {
+                  text: {
+                    type: "plain_text",
+                    text: "This month",
+                    emoji: true,
+                  },
+                  value: "thisMonth",
+                },
+              ],
+              action_id: "selectPresetDateRange",
+            },
+          },
+        ],
+        submit: {
+          type: "plain_text",
+          text: "Submit",
+        },
+      },
+    });
+  } catch (error) {
+    logger.error(error, "Failed to open delete leave list modal");
+  }
+  return;
+});
+
+app.action("selectPresetDateRange", async ({ ack, body }) => {
+  await ack();
+  return;
+});
+
+app.view("filterLeaveList", async ({ ack, view, client, body, logger }) => {
+  await ack();
+
+  const selected =
+    view.state.values.presetDateRadioButton.selectPresetDateRange
+      .selected_option?.value;
+
+  if (selected === "thisWeek") {
+    const { monday, friday } = mondayAndFriday();
+
+    try {
+      const { Items } = await scanDynamo();
+
+      if (!Items) {
+        return;
+      }
+
+      const displayAllLeaveText = displayUserLeaveInText(
+        groupLeaveByUser(
+          filterLeaveByDateRange(monday, friday, Items as Leave[])
+        )
+      );
+
+      await client.chat.postEphemeral({
+        user: body.user.id,
+        channel,
+        text: "listing all the leave",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                displayAllLeaveText ||
+                "🤷‍♂️ No leave found during selected period",
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      logger.error(error, "failed to list this week's leave");
+    }
+  }
+
+  if (selected === "nextWeek") {
+    const { monday, friday } = mondayAndFridayNextWeek();
+
+    try {
+      const { Items } = await scanDynamo();
+
+      if (!Items) {
+        return;
+      }
+      console.log(filterLeaveByDateRange(monday, friday, Items as Leave[]));
+
+      const displayAllLeaveText = displayUserLeaveInText(
+        groupLeaveByUser(
+          filterLeaveByDateRange(monday, friday, Items as Leave[])
+        )
+      );
+
+      await client.chat.postEphemeral({
+        user: body.user.id,
+        channel,
+        text: "listing all the leave",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                displayAllLeaveText ||
+                "🤷‍♂️ No leave found during selected period",
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      logger.error(error, "failed to list next week's leave");
+    }
+  }
+
+  if (selected === "thisMonth") {
+    const { firstDay, lastDay } = startAndEndOfMonth();
+
+    try {
+      const { Items } = await scanDynamo();
+
+      if (!Items) {
+        return;
+      }
+
+      const displayAllLeaveText = displayUserLeaveInText(
+        groupLeaveByUser(
+          filterLeaveByDateRange(firstDay, lastDay, Items as Leave[])
+        )
+      );
+
+      await client.chat.postEphemeral({
+        user: body.user.id,
+        channel,
+        text: "listing all the leave",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                displayAllLeaveText ||
+                "🤷‍♂️ No leave found during selected period",
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      logger.error(error, "failed to list this month's leave");
+    }
+  }
+
+  return;
+});
 
 // Input leave
 app.action("inputLeave", async ({ ack, body, client, logger }) => {
@@ -163,6 +368,8 @@ app.action("listLeave", async ({ ack, logger, client, body }) => {
     if (!Items) {
       return;
     }
+    console.log("Items: ", Items);
+    console.log(JSON.stringify(groupLeaveByUser(Items)));
 
     const displayAllLeaveText = displayUserLeaveInText(groupLeaveByUser(Items));
 
@@ -229,8 +436,6 @@ app.action("deleteLeave", async ({ ack, body, client, logger }) => {
     return;
   }
 
-  console.log((body as BlockAction).view?.id);
-
   try {
     await client.views.update({
       response_action: "update",
@@ -254,17 +459,11 @@ app.action("deleteLeave", async ({ ack, body, client, logger }) => {
 
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
-  leaveStart = ((body as BlockAction).actions[0] as DateSelectionAction)
-    .selected_date;
-
   return;
 });
 
 app.action("leaveEndDate", async ({ ack, body }) => {
   await ack();
-  leaveEnd = ((body as BlockAction).actions[0] as DateSelectionAction)
-    .selected_date;
-
   return;
 });
 
