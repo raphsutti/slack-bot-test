@@ -1,5 +1,6 @@
 import {
   filterLeaveByDateRange,
+  filterLeaveByToday,
   generateDatesList,
   groupLeaveByUser,
   isWithinDateRange,
@@ -80,15 +81,19 @@ describe("groupLeaveByUser", () => {
 describe("mondayAndFriday", () => {
   it("should return monday and friday of that week with given system date of Saturday", () => {
     jest.useFakeTimers().setSystemTime(new Date("2022-07-09"));
+
     const result = mondayAndFriday();
     const expected = { monday: "2022-07-04", friday: "2022-07-08" };
+
     expect(result).toStrictEqual(expected);
   });
 
   it("should return monday and friday of that week with given system date of Sunday", () => {
     jest.useFakeTimers().setSystemTime(new Date("2022-07-10"));
+
     const result = mondayAndFriday();
     const expected = { monday: "2022-07-11", friday: "2022-07-15" };
+
     expect(result).toStrictEqual(expected);
   });
 });
@@ -96,15 +101,19 @@ describe("mondayAndFriday", () => {
 describe("mondayAndFridayNextWeek", () => {
   it("should return monday and friday of next week with given system date of Saturday", () => {
     jest.useFakeTimers().setSystemTime(new Date("2022-07-09"));
+
     const result = mondayAndFridayNextWeek();
     const expected = { monday: "2022-07-11", friday: "2022-07-15" };
+
     expect(result).toStrictEqual(expected);
   });
 
   it("should return monday and friday of next week with given system date of Sunday", () => {
     jest.useFakeTimers().setSystemTime(new Date("2022-07-10"));
+
     const result = mondayAndFridayNextWeek();
     const expected = { monday: "2022-07-18", friday: "2022-07-22" };
+
     expect(result).toStrictEqual(expected);
   });
 });
@@ -112,15 +121,19 @@ describe("mondayAndFridayNextWeek", () => {
 describe("startAndEndOfMonth", () => {
   it("should return start and end of month given system date in July", () => {
     jest.useFakeTimers().setSystemTime(new Date("2022-07-09"));
+
     const result = startAndEndOfMonth();
     const expected = { firstDay: "2022-07-01", lastDay: "2022-07-31" };
+
     expect(result).toStrictEqual(expected);
   });
 
   it("should return start and end of month given system date in September", () => {
     jest.useFakeTimers().setSystemTime(new Date("2022-09-30"));
+
     const result = startAndEndOfMonth();
     const expected = { firstDay: "2022-09-01", lastDay: "2022-09-30" };
+
     expect(result).toStrictEqual(expected);
   });
 });
@@ -139,14 +152,17 @@ describe("generateDatesList", () => {
       "2022-12-24",
       "2022-12-25",
     ];
+
     expect(result).toStrictEqual(expected);
   });
+
   it("should generate list of dates given date range that crosses new month and year", () => {
     const result = generateDatesList(
       new Date("2022-12-31"),
       new Date("2023-01-02")
     );
     const expected = ["2022-12-31", "2023-01-01", "2023-01-02"];
+
     expect(result).toStrictEqual(expected);
   });
 });
@@ -159,6 +175,103 @@ describe("isWithinDateRange", () => {
   it("should return false if input date is not within date range", () => {
     const result = isWithinDateRange("2025-02-19", "2022-01-02", "2022-03-31");
     expect(result).toBe(false);
+  });
+});
+
+describe("filterLeaveByToday", () => {
+  it("should filter leave range that starts on today's date", () => {
+    jest.useFakeTimers().setSystemTime(new Date("2022-09-06"));
+    const items = [
+      {
+        userName: "Raph",
+        leaveEnd: "2022-09-07",
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        userId: "UTF8G6EBA",
+        leaveStart: "2022-09-06",
+      },
+    ];
+
+    const result = filterLeaveByToday(items);
+    const expected = [
+      {
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        leaveEnd: "2022-09-07",
+        leaveStart: "2022-09-06",
+        userId: "UTF8G6EBA",
+        userName: "Raph",
+      },
+    ];
+
+    expect(result).toStrictEqual(expected);
+  });
+
+  it("should filter leave range that ends on today's date", () => {
+    jest.useFakeTimers().setSystemTime(new Date("2022-09-06"));
+    const items = [
+      {
+        userName: "Raph",
+        leaveEnd: "2022-09-06",
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        userId: "UTF8G6EBA",
+        leaveStart: "2022-09-05",
+      },
+    ];
+
+    const result = filterLeaveByToday(items);
+    const expected = [
+      {
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        leaveEnd: "2022-09-06",
+        leaveStart: "2022-09-05",
+        userId: "UTF8G6EBA",
+        userName: "Raph",
+      },
+    ];
+
+    expect(result).toStrictEqual(expected);
+  });
+
+  it("should filter leave range that surrounds on today's date", () => {
+    jest.useFakeTimers().setSystemTime(new Date("2022-09-06"));
+    const items = [
+      {
+        userName: "Raph",
+        leaveEnd: "2022-09-07",
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        userId: "UTF8G6EBA",
+        leaveStart: "2022-09-05",
+      },
+    ];
+
+    const result = filterLeaveByToday(items);
+    const expected = [
+      {
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        leaveEnd: "2022-09-07",
+        leaveStart: "2022-09-05",
+        userId: "UTF8G6EBA",
+        userName: "Raph",
+      },
+    ];
+
+    expect(result).toStrictEqual(expected);
+  });
+
+  it("should not show leave range that is outside of today's date", () => {
+    jest.useFakeTimers().setSystemTime(new Date("2022-09-06"));
+    const items = [
+      {
+        userName: "Raph",
+        leaveEnd: "2022-09-08",
+        id: "cbef9ad9-6afc-4d41-bc74-cb7481384e48",
+        userId: "UTF8G6EBA",
+        leaveStart: "2022-09-07",
+      },
+    ];
+
+    const result = filterLeaveByToday(items);
+
+    expect(result).toStrictEqual([]);
   });
 });
 
@@ -190,6 +303,7 @@ describe("filterLeaveByDateRange", () => {
       },
     ];
     const result = filterLeaveByDateRange("2022-07-01", "2022-07-09", items);
+
     expect(result).toStrictEqual(expected);
   });
 
@@ -220,6 +334,7 @@ describe("filterLeaveByDateRange", () => {
       },
     ];
     const result = filterLeaveByDateRange("2022-07-19", "2022-07-21", items);
+
     expect(result).toStrictEqual(expected);
   });
 
@@ -250,6 +365,7 @@ describe("filterLeaveByDateRange", () => {
       },
     ];
     const result = filterLeaveByDateRange("2022-07-07", "2022-07-21", items);
+
     expect(result).toStrictEqual(expected);
   });
 
@@ -280,6 +396,7 @@ describe("filterLeaveByDateRange", () => {
       },
     ];
     const result = filterLeaveByDateRange("2022-07-09", "2022-07-19", items);
+
     expect(result).toStrictEqual(expected);
   });
 });

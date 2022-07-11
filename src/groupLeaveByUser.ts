@@ -252,6 +252,13 @@ export const isWithinDateRange = (
   Date.parse(inputDate) >= Date.parse(filterStart) &&
   Date.parse(inputDate) <= Date.parse(filterEnd);
 
+export const filterLeaveByToday = (leaveByUser: Leave[]) => {
+  const today = new Date().toISOString().slice(0, 10);
+  return leaveByUser.filter((leave) =>
+    isWithinDateRange(today, leave.leaveStart, leave.leaveEnd)
+  );
+};
+
 export const filterLeaveByDateRange = (
   start: string,
   end: string,
@@ -275,13 +282,3 @@ export const filterLeaveByDateRange = (
     } while (!found && i <= dateList.length);
     return found;
   });
-
-// TODO implement with daily cron job
-export const filterLeaveToday = (leaveByUser: Leave[]) => {
-  const todayString = new Date().toISOString().slice(0, 10);
-  return leaveByUser.filter(
-    (leave) =>
-      Date.parse(todayString) >= Date.parse(leave.leaveStart) &&
-      Date.parse(todayString) <= Date.parse(leave.leaveEnd)
-  );
-};

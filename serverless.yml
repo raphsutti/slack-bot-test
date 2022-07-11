@@ -22,6 +22,12 @@ functions:
       # 10pm every Sunday UTC (8am every Monday AEST) 
       - schedule: cron(0 22 ? * SUN *)
 
+  cronToday:
+    handler: src/cron.today
+    events:
+      # 10pm every sunday-thursday UTC (8am every weekday AEST) 
+      - schedule: cron(0 22 ? * SUN-THU *)
+
 resources:
   Resources:
     athenaLeaveTable:

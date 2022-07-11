@@ -5,6 +5,7 @@ import {
   displayUserLeaveInText,
   groupLeaveByUser,
   filterLeaveByDateRange,
+  filterLeaveByToday,
 } from "./groupLeaveByUser";
 
 const client = new WebClient(process.env.SLACK_BOT_TOKEN, {
@@ -38,6 +39,41 @@ module.exports.startOfWeek = async () => {
               "Good morning! The following people are on leave this week:\n" +
                 displayAllLeaveText ||
               "Good morning! No one is on leave this week :cattype:",
+          },
+        },
+      ],
+    });
+  } catch (error) {
+    console.error(error, "failed to list this week's leave");
+  }
+};
+
+module.exports.today = async () => {
+  const today = new Date();
+
+  try {
+    const { Items } = await scanDynamo();
+
+    if (!Items) {
+      return;
+    }
+
+    const displayAllLeaveText = displayUserLeaveInText(
+      groupLeaveByUser(filterLeaveByToday(Items as Leave[]))
+    );
+
+    await client.chat.postMessage({
+      channel,
+      text: "listing this week's leave",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text:
+              "Good morning! The following people are on leave today:\n" +
+                displayAllLeaveText ||
+              "Good morning! No one is on leave today :cattype:",
           },
         },
       ],
