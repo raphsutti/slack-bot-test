@@ -27,6 +27,8 @@ functions:
     events:
       # 10pm every sunday-thursday UTC (8am every weekday AEST) 
       - schedule: cron(0 22 ? * SUN-THU *)
+      # For testing
+      # - schedule: cron(30 * * * ? *)
 
 resources:
   Resources:

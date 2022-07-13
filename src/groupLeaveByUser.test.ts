@@ -1,3 +1,4 @@
+import { formatInTimeZone } from "date-fns-tz";
 import {
   filterLeaveByDateRange,
   filterLeaveByToday,
@@ -179,8 +180,11 @@ describe("isWithinDateRange", () => {
 });
 
 describe("filterLeaveByToday", () => {
-  it("should filter leave range that starts on today's date", () => {
-    jest.useFakeTimers().setSystemTime(new Date("2022-09-06"));
+  it("should filter leave range that starts on melbourne today's date", () => {
+    // 11pm UTC is 8am next day Melbourne time
+    const UTC11PM_PREVIOUS_DAY = "2022-09-05T22:00:00.000Z";
+    jest.useFakeTimers().setSystemTime(new Date(UTC11PM_PREVIOUS_DAY));
+
     const items = [
       {
         userName: "Raph",

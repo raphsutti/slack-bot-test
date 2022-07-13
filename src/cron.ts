@@ -49,8 +49,6 @@ module.exports.startOfWeek = async () => {
 };
 
 module.exports.today = async () => {
-  const today = new Date();
-
   try {
     const { Items } = await scanDynamo();
 

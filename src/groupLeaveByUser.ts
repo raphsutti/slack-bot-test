@@ -1,4 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { formatInTimeZone } from "date-fns-tz";
 import { Leave } from "./dynamo";
 import { formatDate } from "./formatDate";
 
@@ -253,7 +254,12 @@ export const isWithinDateRange = (
   Date.parse(inputDate) <= Date.parse(filterEnd);
 
 export const filterLeaveByToday = (leaveByUser: Leave[]) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatInTimeZone(
+    new Date(),
+    "Australia/Melbourne",
+    "yyyy-MM-dd"
+  );
+
   return leaveByUser.filter((leave) =>
     isWithinDateRange(today, leave.leaveStart, leave.leaveEnd)
   );
