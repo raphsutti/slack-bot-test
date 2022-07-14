@@ -35,10 +35,10 @@ module.exports.startOfWeek = async () => {
           type: "section",
           text: {
             type: "mrkdwn",
-            text:
-              "Good morning! The following people are on leave this week:\n" +
-                displayAllLeaveText ||
-              "Good morning! No one is on leave this week :cattype:",
+            text: displayAllLeaveText
+              ? "Good morning! The following people are on leave this week:\n" +
+                displayAllLeaveText
+              : "Good morning! No one is on leave this week :cattype:",
           },
         },
       ],
@@ -68,10 +68,10 @@ module.exports.today = async () => {
           type: "section",
           text: {
             type: "mrkdwn",
-            text:
-              "Good morning! The following people are on leave today:\n" +
-                displayAllLeaveText ||
-              "Good morning! No one is on leave today :cattype:",
+            text: displayAllLeaveText
+              ? "Good morning! The following people are on leave today:\n" +
+                displayAllLeaveText
+              : "Good morning! No one is on leave today :blob-work:",
           },
         },
       ],
