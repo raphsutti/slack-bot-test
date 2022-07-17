@@ -9,6 +9,16 @@ interface LeaveByUser {
   leaveList: { id: string; leave: string }[];
 }
 
+const formatLeaveRangeWithoutRepitition = (
+  leaveStart: string,
+  leaveEnd: string
+) => {
+  if (leaveStart === leaveEnd) {
+    return leaveStart;
+  }
+  return `${leaveStart},${leaveEnd}`;
+};
+
 export const groupLeaveByUser = (
   items: DocumentClient.ItemList,
   withYear = false
@@ -29,7 +39,10 @@ export const groupLeaveByUser = (
         leaveList: [
           {
             id: item.id,
-            leave: `${item.leaveStart},${item.leaveEnd}`,
+            leave: formatLeaveRangeWithoutRepitition(
+              item.leaveStart,
+              item.leaveEnd
+            ),
           },
         ],
       });
@@ -39,7 +52,10 @@ export const groupLeaveByUser = (
     if (index >= 0) {
       leaveByUser[index].leaveList.push({
         id: item.id,
-        leave: `${item.leaveStart},${item.leaveEnd}`,
+        leave: formatLeaveRangeWithoutRepitition(
+          item.leaveStart,
+          item.leaveEnd
+        ),
       });
     }
   });
