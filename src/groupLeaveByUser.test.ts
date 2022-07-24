@@ -121,7 +121,9 @@ describe("mondayAndFridayNextWeek", () => {
 
 describe("startAndEndOfMonth", () => {
   it("should return start and end of month given system date in July", () => {
-    jest.useFakeTimers().setSystemTime(new Date("2022-07-09"));
+    jest
+      .useFakeTimers()
+      .setSystemTime(new Date("2022-07-09T00:00:00.000+10:00"));
 
     const result = startAndEndOfMonth();
     const expected = { firstDay: "2022-07-01", lastDay: "2022-07-31" };
@@ -130,7 +132,9 @@ describe("startAndEndOfMonth", () => {
   });
 
   it("should return start and end of month given system date in September", () => {
-    jest.useFakeTimers().setSystemTime(new Date("2022-09-30"));
+    jest
+      .useFakeTimers()
+      .setSystemTime(new Date("2022-09-30T00:00:00.000+10:00"));
 
     const result = startAndEndOfMonth();
     const expected = { firstDay: "2022-09-01", lastDay: "2022-09-30" };
