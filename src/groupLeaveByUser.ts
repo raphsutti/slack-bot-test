@@ -39,7 +39,7 @@ export const groupLeaveByUser = (
         leaveList: [
           {
             id: item.id,
-            leave: formatLeaveRangeWithoutRepitition(
+            leave: formatLeaveRangeWithoutRepetition(
               item.leaveStart,
               item.leaveEnd
             ),
