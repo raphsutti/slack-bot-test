@@ -52,7 +52,7 @@ export const groupLeaveByUser = (
     if (index >= 0) {
       leaveByUser[index].leaveList.push({
         id: item.id,
-        leave: formatLeaveRangeWithoutRepitition(
+        leave: formatLeaveRangeWithoutRepetition(
           item.leaveStart,
           item.leaveEnd
         ),
