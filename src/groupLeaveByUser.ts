@@ -9,7 +9,7 @@ interface LeaveByUser {
   leaveList: { id: string; leave: string }[];
 }
 
-const formatLeaveRangeWithoutRepitition = (
+const formatLeaveRangeWithoutRepetition = (
   leaveStart: string,
   leaveEnd: string
 ) => {
