@@ -1,4 +1,3 @@
-import { formatInTimeZone } from "date-fns-tz";
 import {
   filterLeaveByDateRange,
   filterLeaveByToday,
@@ -69,7 +68,7 @@ describe("groupLeaveByUser", () => {
         userId: "UTF8G6EBA",
         name: "Arnav",
         leaveList: [
-          { id: "174a28fc-dc66-4dd1-b3da-bbde727cf0ee", leave: "09/07-09/07" },
+          { id: "174a28fc-dc66-4dd1-b3da-bbde727cf0ee", leave: "09/07" },
           { id: "174a28fc-dc66-4dd1-b3da-bbde727cf0ee", leave: "01/08-09/08" },
         ],
       },
