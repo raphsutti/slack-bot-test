@@ -15,11 +15,14 @@ export interface Leave {
 const client = new DocumentClient({ region: "ap-southeast-2" });
 
 export const putDynamoItem = (data: Leave) => {
+  const leaveEndDate = new Date(Date.parse(data.leaveEnd));
+  const oneWeekAfterLeaveEnd = leaveEndDate.setDate(leaveEndDate.getDate() + 7);
   const params = {
     TableName: DYNAMO_TABLE,
     Item: {
       ...data,
       id: uuidV4(),
+      ttl: oneWeekAfterLeaveEnd,
     },
     ReturnConsumedCapacity: "TOTAL",
   };

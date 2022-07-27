@@ -289,6 +289,8 @@ app.action("nextMonth", async ({ ack, logger, client, body }) => {
   return;
 });
 
+// TODO Allow half day leave entries
+// TODO Allow entering leave on behalf of someone else
 // Input leave
 app.action("inputLeave", async ({ ack, body, client, logger }) => {
   await ack();
@@ -496,8 +498,6 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
   }
   return;
 });
-
-// TODO remove old leave from db cron job every week
 
 export const handler = async (event: AwsEvent, context: any, callback: any) => {
   const receiver = await awsLambdaReceiver.start();
