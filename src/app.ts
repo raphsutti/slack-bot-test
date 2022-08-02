@@ -504,26 +504,39 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
     const selectedUserId =
       view.state.values.userSelectAction.userSelectAction.selected_user;
 
+    if (!selectedUserId) throw new Error("No user id selected");
+
+    const enteringLeaveForAnotherUser = !(selectedUserId === body.user.id);
+
     const { user } = await client.users.info({
-      user: selectedUserId || body.user.id,
+      user: selectedUserId,
     });
+    if (!user) throw new Error("User not found");
+
     const { id, name } = body.user;
 
     putDynamoItem({
-      userId: selectedUserId || id,
-      userName: user?.real_name ?? name,
+      userId: selectedUserId,
+      userName: (user.real_name ?? user.name) || "",
       leaveStart,
       leaveEnd,
     });
 
+    const text = enteringLeaveForAnotherUser
+      ? `:sus: <@${body.user.id}> has entered leave for ${
+          user?.real_name ?? name
+        } 🏝\nStart: ${formatDate(leaveStart, true)}\nEnd: ${formatDate(
+          leaveEnd,
+          true
+        )}`
+      : `<@${body.user.id}> has entered leave 🏝\nStart: ${formatDate(
+          leaveStart,
+          true
+        )}\nEnd: ${formatDate(leaveEnd, true)}`;
+
     await client.chat.postMessage({
       channel,
-      text: `<@${body.user.id}> has entered leave for ${
-        user?.real_name ?? name
-      } 🏝\nStart: ${formatDate(leaveStart, true)}\nEnd: ${formatDate(
-        leaveEnd,
-        true
-      )}`,
+      text,
     });
   } catch (error) {
     logger.error(error, "Failed to put new leave entry to Dynamo");
