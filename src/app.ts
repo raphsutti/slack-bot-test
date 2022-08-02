@@ -290,7 +290,6 @@ app.action("nextMonth", async ({ ack, logger, client, body }) => {
 });
 
 // TODO Allow half day leave entries
-// TODO Allow entering leave on behalf of someone else
 // Input leave
 app.action("inputLeave", async ({ ack, body, client, logger }) => {
   await ack();
@@ -309,6 +308,28 @@ app.action("inputLeave", async ({ ack, body, client, logger }) => {
           text: "Leave entry",
         },
         blocks: [
+          {
+            type: "input",
+            block_id: "userSelectAction",
+            element: {
+              type: "users_select",
+              placeholder: {
+                type: "plain_text",
+                text: "Select users",
+                emoji: true,
+              },
+              initial_user: body.user.id,
+              action_id: "userSelectAction",
+            },
+            label: {
+              type: "plain_text",
+              text: "Entering leave for:",
+              emoji: true,
+            },
+          },
+          {
+            type: "divider",
+          },
           {
             type: "section",
             block_id: "leaveStartDate",
@@ -452,6 +473,11 @@ app.action("deleteLeave", async ({ ack, body, client, logger }) => {
   return;
 });
 
+app.action("userSelectAction", async ({ ack, body }) => {
+  await ack();
+  return;
+});
+
 app.action("leaveStartDate", async ({ ack, body }) => {
   await ack();
   return;
@@ -474,13 +500,17 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
       logger.error("Missing leave start or leave end date");
       return;
     }
-    const { user } = await client.users.info({
-      user: body.user.id,
-    });
 
+    const selectedUserId =
+      view.state.values.userSelectAction.userSelectAction.selected_user;
+
+    const { user } = await client.users.info({
+      user: selectedUserId || body.user.id,
+    });
     const { id, name } = body.user;
+
     putDynamoItem({
-      userId: id,
+      userId: selectedUserId || id,
       userName: user?.real_name ?? name,
       leaveStart,
       leaveEnd,
@@ -488,10 +518,12 @@ app.view("viewSelectDateRange", async ({ ack, body, client, view, logger }) => {
 
     await client.chat.postMessage({
       channel,
-      text: `<@${body.user.id}> has entered leave 🏝\nStart: ${formatDate(
-        leaveStart,
+      text: `<@${body.user.id}> has entered leave for ${
+        user?.real_name ?? name
+      } 🏝\nStart: ${formatDate(leaveStart, true)}\nEnd: ${formatDate(
+        leaveEnd,
         true
-      )}\nEnd: ${formatDate(leaveEnd, true)}`,
+      )}`,
     });
   } catch (error) {
     logger.error(error, "Failed to put new leave entry to Dynamo");
